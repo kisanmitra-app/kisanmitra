@@ -1,0 +1,6 @@
+packages:
+  - packages/*
+  - mobile
+  - backend
+
+nodeLinker: hoisted

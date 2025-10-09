@@ -1,0 +1,26 @@
+{
+  "name": "backend",
+  "version": "0.1.0",
+  "description": "backend for the application",
+  "main": "dis/index.mjs",
+  "scripts": {
+    "start": "node dis/index.mjs",
+    "build": "tsup",
+    "watch": "tsx --watch src/index.ts"
+  },
+  "author": {
+    "name": "Susmita Das",
+    "email": "susmitadas9639@gmail.com",
+    "url": "https://sushh.me"
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^24.7.1",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.6",
+    "typescript": "~5.9.3"
+  },
+  "dependencies": {
+    "hono": "^4.9.10"
+  }
+}

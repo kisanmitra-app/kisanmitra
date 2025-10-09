@@ -1,0 +1,22 @@
+{
+  "name": "capstone",
+  "version": "0.1.0",
+  "description": "capstone project",
+  "scripts": {
+    "watch": "pnpm run -r watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/susmitadas22/capstone.git"
+  },
+  "author": {
+    "name": "Susmita Das",
+    "url": "https://sushh.me",
+    "email": "susmitadas9639@gmail.com"
+  },
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/susmitadas22/capstone/issues"
+  },
+  "homepage": "https://github.com/susmitadas22/capstone#readme"
+}
