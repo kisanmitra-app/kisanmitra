@@ -1,7 +1,7 @@
 {
-  "name": "backend",
+  "name": "api",
   "version": "0.1.0",
-  "description": "backend for the application",
+  "description": "REST API for the application",
   "main": "dis/index.mjs",
   "scripts": {
     "start": "node dis/index.mjs",
@@ -21,6 +21,12 @@
     "typescript": "~5.9.3"
   },
   "dependencies": {
-    "hono": "^4.9.10"
+    "@hono/node-server": "^1.19.5",
+    "dotenv": "^17.2.3",
+    "envalid": "^8.1.0",
+    "hono": "^4.9.10",
+    "pino": "^10.0.0",
+    "pino-pretty": "^13.1.1",
+    "zod": "^4.1.12"
   }
 }
