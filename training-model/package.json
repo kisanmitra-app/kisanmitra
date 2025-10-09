@@ -1,0 +1,7 @@
+{
+  "name": "training-model",
+  "version": "0.1.0",
+  "description": "model for crop disease identification",
+  "scripts": {},
+  "license": "Apache-2.0"
+}
