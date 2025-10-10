@@ -1,215 +1,220 @@
-import os
-import sys
 import tensorflow as tf
-from tensorflow import keras
-from keras import layers
-import tensorflowjs as tfjs
-import json
+from pathlib import Path
+import matplotlib.pyplot as plt
+import warnings
+from urllib3.exceptions import NotOpenSSLWarning
+from model import create_efficient_model, unfreeze_base_model
+from data_loader import (
+    create_datasets, 
+    create_test_dataset, 
+    save_class_names, 
+    get_dataset_info
+)
+
+warnings.filterwarnings('ignore', category=NotOpenSSLWarning)
 
 
-def check_dataset_exists(data_dir):
-    """Check if dataset directory exists and contains subdirectories"""
-    if not os.path.exists(data_dir):
-        print(f"Error: Dataset directory '{data_dir}' does not exist!")
-        return False
-    
-    if not os.path.isdir(data_dir):
-        print(f"Error: '{data_dir}' is not a directory!")
-        return False
-    
-    # Check if directory has subdirectories (classes)
-    subdirs = [d for d in os.listdir(data_dir) 
-               if os.path.isdir(os.path.join(data_dir, d))]
-    
-    if len(subdirs) == 0:
-        print(f"Error: No class subdirectories found in '{data_dir}'!")
-        return False
-    
-    print(f"Dataset directory found with {len(subdirs)} classes")
-    return True
+# Enable GPU acceleration
+print("TensorFlow version:", tf.__version__)
+print("GPU Available:", len(tf.config.list_physical_devices('GPU')) > 0)
+
+# Configuration
+CONFIG = {
+    'data_dir': './dataset/plant_disease',  # Updated path
+    'img_size': (224, 224),
+    'batch_size': 16,  # Smaller batch 
+    'epochs_initial': 1,  # Initial training with frozen base
+    'epochs_finetune': 1,  # Fine-tuning epochs
+    'learning_rate_initial': 0.001,
+    'learning_rate_finetune': 0.0001,
+    'model_save_path': '../models/saved_model',
+    'use_transfer_learning': True  # Set False for simple CNN
+}
 
 
-def create_model(num_classes, input_shape=(224, 224, 3)):
-    """Create CNN model for crop disease classification"""
-    inputs = keras.Input(shape=input_shape)
+def plot_training_history(history, save_path='models/training_history.png'):
+    """
+    Plot training metrics
+    """
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
     
-    # Only include rescaling in the model
-    x = layers.Rescaling(1./255)(inputs)
+    # Accuracy
+    ax1.plot(history.history['accuracy'], label='Train Accuracy')
+    ax1.plot(history.history['val_accuracy'], label='Val Accuracy')
+    ax1.set_title('Model Accuracy')
+    ax1.set_xlabel('Epoch')
+    ax1.set_ylabel('Accuracy')
+    ax1.legend()
+    ax1.grid(True)
     
-    # Convolutional blocks
-    x = layers.Conv2D(32, 3, padding='same', activation='relu')(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.Conv2D(32, 3, padding='same', activation='relu')(x)
-    x = layers.MaxPooling2D()(x)
-    x = layers.Dropout(0.25)(x)
+    # Loss
+    ax2.plot(history.history['loss'], label='Train Loss')
+    ax2.plot(history.history['val_loss'], label='Val Loss')
+    ax2.set_title('Model Loss')
+    ax2.set_xlabel('Epoch')
+    ax2.set_ylabel('Loss')
+    ax2.legend()
+    ax2.grid(True)
     
-    x = layers.Conv2D(64, 3, padding='same', activation='relu')(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.Conv2D(64, 3, padding='same', activation='relu')(x)
-    x = layers.MaxPooling2D()(x)
-    x = layers.Dropout(0.25)(x)
-    
-    x = layers.Conv2D(128, 3, padding='same', activation='relu')(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.Conv2D(128, 3, padding='same', activation='relu')(x)
-    x = layers.MaxPooling2D()(x)
-    x = layers.Dropout(0.3)(x)
-    
-    x = layers.Conv2D(256, 3, padding='same', activation='relu')(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.MaxPooling2D()(x)
-    x = layers.Dropout(0.3)(x)
-    
-    # Dense layers
-    x = layers.Flatten()(x)
-    x = layers.Dense(512, activation='relu', kernel_regularizer=keras.regularizers.l2(0.001))(x)
-    x = layers.Dropout(0.5)(x)
-    x = layers.Dense(256, activation='relu', kernel_regularizer=keras.regularizers.l2(0.001))(x)
-    x = layers.Dropout(0.5)(x)
-    outputs = layers.Dense(num_classes, activation='softmax')(x)
-    
-    return keras.Model(inputs=inputs, outputs=outputs)
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    print(f"Training history plot saved to {save_path}")
 
 
-def augment(image, label, data_augmentation):
-    """Apply data augmentation"""
-    return data_augmentation(image, training=True), label
-
-
-def main():
-    """Main training function"""
-    # Configuration
-    IMAGE_SIZE = (224, 224)
-    BATCH_SIZE = 16
-    EPOCHS = 1
-    DATA_DIR = './data/PlantVillage'
-    MODEL_DIR = './models'
+def train_model():
+    """
+    Main training function
+    """
     
-    print("TensorFlow version:", tf.__version__)
-    print("Num GPUs Available:", len(tf.config.list_physical_devices('GPU')))
+    # Step 1: Load Data
+    print("\n" + "="*50)
+    print("STEP 1: Loading Data")
+    print("="*50)
     
-    # Check if dataset exists
-    if not check_dataset_exists(DATA_DIR):
-        print("\n💡 Tip: Make sure your dataset is organized as:")
-        print("   ./data/PlantVillage/")
-        print("   ├── class1/")
-        print("   │   ├── image1.jpg")
-        print("   │   └── image2.jpg")
-        print("   └── class2/")
-        print("       ├── image1.jpg")
-        print("       └── image2.jpg")
-        sys.exit(1)
-    
-    # Create models directory if it doesn't exist
-    os.makedirs(MODEL_DIR, exist_ok=True)
-    
-    # Load dataset
-    print("\nLoading datasets...")
-    train_ds = tf.keras.utils.image_dataset_from_directory(
-        DATA_DIR,
-        validation_split=0.2,
-        subset="training",
-        seed=123,
-        image_size=IMAGE_SIZE,
-        batch_size=BATCH_SIZE
+    train_ds, val_ds, class_names = create_datasets(
+        CONFIG['data_dir'],
+        img_size=CONFIG['img_size'],
+        batch_size=CONFIG['batch_size']
     )
     
-    val_ds = tf.keras.utils.image_dataset_from_directory(
-        DATA_DIR,
-        validation_split=0.2,
-        subset="validation",
-        seed=123,
-        image_size=IMAGE_SIZE,
-        batch_size=BATCH_SIZE
-    )
+    num_classes = get_dataset_info(train_ds, val_ds)
+    save_class_names(class_names)
     
-    class_names = train_ds.class_names
-    num_classes = len(class_names)
-    print(f"Found {num_classes} classes: {class_names[:5]}..." if len(class_names) > 5 else f"Found {num_classes} classes: {class_names}")
+    # Step 2: Create Model
+    print("\n" + "="*50)
+    print("STEP 2: Creating Model")
+    print("="*50)
     
-    # Data augmentation
-    data_augmentation = keras.Sequential([
-        layers.RandomFlip("horizontal"),
-        layers.RandomRotation(0.1),
-        layers.RandomZoom(0.1),
-    ])
-    
-    # Apply augmentation to training data only
-    train_ds = train_ds.map(
-        lambda x, y: augment(x, y, data_augmentation), 
-        num_parallel_calls=tf.data.AUTOTUNE
-    )
-    train_ds = train_ds.cache().prefetch(buffer_size=tf.data.AUTOTUNE)
-    val_ds = val_ds.cache().prefetch(buffer_size=tf.data.AUTOTUNE)
-    
-    # Create model
-    print("\nBuilding model...")
-    model = create_model(num_classes)
-    
-    model.compile(
-        optimizer=keras.optimizers.Adam(0.001),
-        loss='sparse_categorical_crossentropy',
-        metrics=['accuracy']
-    )
+    if CONFIG['use_transfer_learning']:
+        model, base_model = create_efficient_model(
+            input_shape=(*CONFIG['img_size'], 3),
+            num_classes=num_classes
+        )
+        print("Using MobileNetV2 transfer learning")
+    else:
+        from model import create_simple_cnn
+        model = create_simple_cnn(
+            input_shape=(*CONFIG['img_size'], 3),
+            num_classes=num_classes
+        )
+        base_model = None
+        print("Using simple CNN architecture")
     
     model.summary()
     
+    # Step 3: Initial Training
+    print("\n" + "="*50)
+    print("STEP 3: Initial Training")
+    print("="*50)
+    
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(CONFIG['learning_rate_initial']),
+        loss='categorical_crossentropy',
+        metrics=['accuracy']
+    )
+    
     # Callbacks
     callbacks = [
-        keras.callbacks.EarlyStopping(
+        tf.keras.callbacks.EarlyStopping(
             monitor='val_loss',
-            patience=10,
-            restore_best_weights=True
+            patience=5,
+            restore_best_weights=True,
+            verbose=1
         ),
-        keras.callbacks.ReduceLROnPlateau(
+        tf.keras.callbacks.ReduceLROnPlateau(
             monitor='val_loss',
             factor=0.5,
-            patience=5,
-            min_lr=1e-7
+            patience=3,
+            min_lr=1e-7,
+            verbose=1
         ),
-        keras.callbacks.ModelCheckpoint(
-            f'{MODEL_DIR}/best_model.h5',
+        tf.keras.callbacks.ModelCheckpoint(
+            'models/checkpoint.keras',
             monitor='val_accuracy',
-            save_best_only=True
+            save_best_only=True,
+            verbose=1
         )
     ]
     
-    # Train
-    print("\nStarting training...")
-    history = model.fit(
+    history_initial = model.fit(
         train_ds,
         validation_data=val_ds,
-        epochs=EPOCHS,
-        callbacks=callbacks
+        epochs=CONFIG['epochs_initial'],
+        callbacks=callbacks,
+        verbose=1
     )
     
-    # Save model
-    print("\nSaving model in Keras format...")
-    model.save(f'{MODEL_DIR}/last_model.h5')
+    # Step 4: Fine-tuning (if using transfer learning)
+    if CONFIG['use_transfer_learning'] and base_model is not None:
+        print("\n" + "="*50)
+        print("STEP 4: Fine-tuning")
+        print("="*50)
+        
+        unfreeze_base_model(base_model, num_layers=30)
+        
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(CONFIG['learning_rate_finetune']),
+            loss='categorical_crossentropy',
+            metrics=['accuracy']
+        )
+        
+        history_finetune = model.fit(
+            train_ds,
+            validation_data=val_ds,
+            epochs=CONFIG['epochs_finetune'],
+            callbacks=callbacks,
+            verbose=1
+        )
+        
+        # Combine histories
+        for key in history_initial.history:
+            history_initial.history[key].extend(history_finetune.history[key])
     
-    # Convert to TensorFlow.js format (commented out by default)
-    # print("\n🔄 Converting to TensorFlow.js format...")
-    # tfjs.converters.save_keras_model(model, f'{MODEL_DIR}/crop-disease-detector')
+    # Step 5: Evaluate
+    print("\n" + "="*50)
+    print("STEP 5: Final Evaluation")
+    print("="*50)
     
-    # Save class names
-    print("Saving class names and metadata...")
-    with open(f'{MODEL_DIR}/disease-classes.json', 'w') as f:
-        json.dump(class_names, f, indent=2)
+    val_loss, val_acc = model.evaluate(val_ds)
+    print(f"\nFinal Validation Accuracy: {val_acc:.4f}")
+    print(f"Final Validation Loss: {val_loss:.4f}")
     
-    # Save metadata
-    metadata = {
-        'num_classes': num_classes,
-        'image_size': IMAGE_SIZE,
-        'model_type': 'crop_disease_classifier',
-        'class_names': class_names
-    }
-    with open(f'{MODEL_DIR}/metadata.json', 'w') as f:
-        json.dump(metadata, f, indent=2)
+    # Test on test set if available
+    test_ds = create_test_dataset(CONFIG['data_dir'], CONFIG['img_size'], CONFIG['batch_size'])
+    if test_ds is not None:
+        test_loss, test_acc = model.evaluate(test_ds)
+        print(f"\nTest Accuracy: {test_acc:.4f}")
+        print(f"Test Loss: {test_loss:.4f}")
     
-    print("\nModel trained and saved successfully!")
-    print(f"Final validation accuracy: {max(history.history['val_accuracy']):.2%}")
-    print(f"Models saved in: {MODEL_DIR}/")
+    # Step 6: Save Model
+    print("\n" + "="*50)
+    print("STEP 6: Saving Model")
+    print("="*50)
+    
+    # Save in TensorFlow SavedModel format
+    model.export(CONFIG['model_save_path'])
+    print(f"Model saved to {CONFIG['model_save_path']}")
+    
+    # Also save as .keras format (newer format)
+    model.save('models/plant_disease_model.keras')
+    print("Model also saved as plant_disease_model.keras")
+    
+    # Plot training history
+    plot_training_history(history_initial)
+    
+    print("\n" + "="*50)
+    print("Training Complete!")
+    print("="*50)
+    print("\nNext steps:")
+    print("1. Run: python src/convert_model.py")
+    print("2. Use the converted model in Node.js with TensorFlow.js")
+    
+    return model, history_initial
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    # Create necessary directories
+    Path('models').mkdir(exist_ok=True)
+    
+    # Train model
+    model, history = train_model()
