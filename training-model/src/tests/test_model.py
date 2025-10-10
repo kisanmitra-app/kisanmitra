@@ -38,9 +38,28 @@ def load_model_with_lambda(model_path):
         return model
 
 def load_class_names(path='models/class_names.json'):
-    """Load class names from JSON file"""
+    """
+    Load class names from JSON file
+    Handles both list and dict formats
+    """
     with open(path, 'r') as f:
-        return json.load(f)
+        data = json.load(f)
+    
+    # If it's a list, return as is
+    if isinstance(data, list):
+        return data
+    
+    # If it's a dict, convert to list (sorted by key)
+    if isinstance(data, dict):
+        # Try to convert keys to int and sort
+        try:
+            sorted_items = sorted([(int(k), v) for k, v in data.items()])
+            return [v for k, v in sorted_items]
+        except:
+            # If keys are not numbers, return values as list
+            return list(data.values())
+    
+    return data
 
 def load_and_preprocess_image(image_path, target_size=(224, 224)):
     """
@@ -72,23 +91,37 @@ def predict_image(model, image_path, class_names, top_k=5):
     # Make prediction
     predictions = model.predict(img_array, verbose=0)
     
-    # Get top K predictions
+    # Get top K predictions (limit to actual number of classes)
+    num_classes = len(class_names)
+    top_k = min(top_k, num_classes)
     top_indices = np.argsort(predictions[0])[::-1][:top_k]
     
     print(f"\nTop {top_k} Predictions:")
     print("-" * 60)
     
+    results = []
     for i, idx in enumerate(top_indices, 1):
-        class_name = class_names[idx]
-        confidence = predictions[0][idx] * 100
-        print(f"{i}. {class_name:40s} {confidence:6.2f}%")
+        # Convert numpy int64 to Python int
+        idx = int(idx)
+        
+        # Check if index is valid
+        if idx < len(class_names):
+            class_name = class_names[idx]
+            confidence = float(predictions[0][idx]) * 100
+            print(f"{i}. {class_name:40s} {confidence:6.2f}%")
+            results.append((class_name, float(predictions[0][idx])))
+        else:
+            print(f"{i}. Class_{idx:02d} (Unknown)                    {float(predictions[0][idx])*100:6.2f}%")
+            results.append((f"Class_{idx:02d}", float(predictions[0][idx])))
     
     # Return top prediction
-    top_idx = top_indices[0]
+    top_idx = int(top_indices[0])
+    top_class = class_names[top_idx] if top_idx < len(class_names) else f"Class_{top_idx:02d}"
+    
     return {
-        'class': class_names[top_idx],
-        'confidence': predictions[0][top_idx],
-        'all_predictions': [(class_names[idx], predictions[0][idx]) for idx in top_indices],
+        'class': top_class,
+        'confidence': float(predictions[0][top_idx]),
+        'all_predictions': results,
         'image': original_img
     }
 
@@ -128,17 +161,17 @@ def test_model():
     
     # Check if model exists
     if not os.path.exists(model_path):
-        print(f"\n❌ Error: Model not found at {model_path}")
+        print(f"\nError: Model not found at {model_path}")
         print("Please train the model first: python training-model/src/app.py")
         return
     
     # Load model with custom objects for Lambda layer
-    print(f"\n📦 Loading model from: {model_path}")
+    print(f"\nLoading model from: {model_path}")
     model = load_model_with_lambda(model_path)
     print("✓ Model loaded successfully")
     
     # Print model info
-    print(f"\n📊 Model Information:")
+    print(f"\nModel Information:")
     print(f"   Input shape:  {model.input_shape}")
     print(f"   Output shape: {model.output_shape}")
     print(f"   Parameters:   {model.count_params():,}")
@@ -147,8 +180,15 @@ def test_model():
     class_names = load_class_names(class_names_path)
     print(f"   Classes:      {len(class_names)}")
     
+    # Debug: print class names
+    print(f"\nClass Names:")
+    for i, name in enumerate(class_names[:10]):  # Show first 10
+        print(f"   {i}: {name}")
+    if len(class_names) > 10:
+        print(f"   ... and {len(class_names) - 10} more")
+    
     # Get test images
-    print(f"\n🔍 Looking for test images...")
+    print(f"\nLooking for test images...")
     
     # Check for test images in different locations
     test_dirs = [
@@ -164,7 +204,7 @@ def test_model():
                 break
     
     if not test_images:
-        print("\n⚠️  No test images found!")
+        print("\nNo test images found!")
         print("\nPlease provide test images in one of these locations:")
         for test_dir in test_dirs:
             print(f"   - {test_dir}/")
@@ -184,12 +224,16 @@ def test_model():
     # Test on each image
     results = []
     for img_path in test_images:
-        result = predict_image(model, str(img_path), class_names)
-        results.append(result)
-        
-        # Save visualization
-        output_path = output_dir / f"pred_{img_path.stem}.png"
-        visualize_prediction(result, save_path=output_path)
+        try:
+            result = predict_image(model, str(img_path), class_names)
+            results.append(result)
+            
+            # Save visualization
+            output_path = output_dir / f"pred_{img_path.stem}.png"
+            visualize_prediction(result, save_path=output_path)
+        except Exception as e:
+            print(f"\nError processing {img_path.name}: {e}")
+            continue
     
     # Summary
     print("\n" + "="*60)
@@ -232,10 +276,10 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         image_path = sys.argv[1]
         if os.path.exists(image_path):
-            print(f"\n🖼️  Testing single image: {image_path}")
+            print(f"\nTesting single image: {image_path}")
             test_single_image(image_path)
         else:
-            print(f"\n❌ Error: Image not found: {image_path}")
+            print(f"\Error: Image not found: {image_path}")
     else:
         # Test on all images in test directory
         test_model()
