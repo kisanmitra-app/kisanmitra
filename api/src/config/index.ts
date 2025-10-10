@@ -20,4 +20,10 @@ export const env = envalid.cleanEnv(process.env, {
   // ========= HTTP =========
   HTTP_PORT: envalid.port({ default: 8080 }),
   HTTP_HOST: envalid.str({ default: "127.0.0.1" }),
+
+  // ========= DATABASE =========
+  MONGO_URI: envalid.str(),
+
+  // ========= REDIS =========
+  REDIS_URI: envalid.str(),
 });

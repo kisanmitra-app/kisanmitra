@@ -12,10 +12,12 @@ app.use("*", prettyJSON({ space: 4 }));
 app.use(
   "*",
   cors({
-    origin: ["*"],
-    credentials: true,
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    origin: "*",
     allowHeaders: ["Content-Type", "Authorization"],
+    allowMethods: ["POST", "GET", "OPTIONS", "PUT", "DELETE"],
+    exposeHeaders: ["Content-Length"],
+    maxAge: 600,
+    credentials: true,
   })
 );
 
