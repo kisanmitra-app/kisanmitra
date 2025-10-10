@@ -26,4 +26,9 @@ export const env = envalid.cleanEnv(process.env, {
 
   // ========= REDIS =========
   REDIS_URI: envalid.str(),
+
+  // ========= GOOGLE AUTH =========
+  GOOGLE_CLIENT_ID: envalid.str(),
+  GOOGLE_CLIENT_SECRET: envalid.str(),
+  GOOGLE_REDIRECT_URI: envalid.str({ default: "KisanMitra://callback" }),
 });
