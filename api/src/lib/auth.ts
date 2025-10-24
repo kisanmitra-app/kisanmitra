@@ -20,6 +20,7 @@ export const auth = betterAuth({
   database: mongodbAdapter(db),
   emailAndPassword: { enabled: true },
   trustedOrigins: [
+    "exp://172.20.10.3:8081/--/callback",
     "exp://192.168.1.6:8081/--/callback",
     "exp://192.168.1.6:8081/--/(app)/(tabs)",
   ],
