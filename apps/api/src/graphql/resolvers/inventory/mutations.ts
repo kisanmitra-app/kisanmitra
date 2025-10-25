@@ -10,7 +10,16 @@ export const Mutation = {
   ): Promise<IInventory> => {
     const user = context.get("user");
     const doc = await Inventory.create({ ...input, user: user?.id });
-    await doc.populate(["user", "product"]);
+    await doc.populate([
+      "user",
+      {
+        path: "product",
+        populate: [
+          { path: "user" },
+          { path: "category", populate: { path: "user" } },
+        ],
+      },
+    ]);
     return doc;
   },
 
@@ -22,7 +31,16 @@ export const Mutation = {
     if (!doc) throw new Error("Inventory not found");
     doc.set({ ...input });
     await doc.save();
-    await doc.populate(["user", "product"]);
+    await doc.populate([
+      "user",
+      {
+        path: "product",
+        populate: [
+          { path: "user" },
+          { path: "category", populate: { path: "user" } },
+        ],
+      },
+    ]);
     return doc;
   },
 

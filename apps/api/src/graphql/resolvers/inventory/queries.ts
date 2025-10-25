@@ -10,7 +10,13 @@ export const Query = {
     const user = context.get("user");
     const docs = await Inventory.find({ user: user?.id }).populate([
       "user",
-      "product",
+      {
+        path: "product",
+        populate: [
+          { path: "user" },
+          { path: "category", populate: { path: "user" } },
+        ],
+      },
     ]);
     return docs;
   },
@@ -19,6 +25,15 @@ export const Query = {
     _: any,
     { id }: { id: string }
   ): Promise<IInventory | null> => {
-    return Inventory.findById(id).populate(["user", "product"]);
+    return Inventory.findById(id).populate([
+      "user",
+      {
+        path: "product",
+        populate: [
+          { path: "user" },
+          { path: "category", populate: { path: "user" } },
+        ],
+      },
+    ]);
   },
 };

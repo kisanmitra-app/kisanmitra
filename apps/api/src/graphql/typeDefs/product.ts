@@ -21,7 +21,7 @@ export const productsTypeDefs = gql`
   input CreateProductInput {
     name: String!
     description: String
-    categoryId: ID!
+    category: String!
     brand: String
     unit: String
   }
@@ -29,7 +29,7 @@ export const productsTypeDefs = gql`
   input UpdateProductInput {
     name: String
     description: String
-    categoryId: ID
+    category: String
     brand: String
     unit: String
   }

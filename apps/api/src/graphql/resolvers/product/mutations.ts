@@ -10,7 +10,11 @@ export const Mutation = {
   ): Promise<IProduct> => {
     const user = context.get("user");
     const product = await Product.create({ ...input, user: user?.id });
-    await product.populate(["user", "category"]);
+    await product.populate([
+      "user",
+      "category",
+      { path: "category", populate: { path: "user" } },
+    ]);
     return product;
   },
 
@@ -22,7 +26,11 @@ export const Mutation = {
     if (!product) throw new Error("Product not found");
     product.set({ ...input });
     await product.save();
-    await product.populate(["user", "category"]);
+    await product.populate([
+      "user",
+      "category",
+      { path: "category", populate: { path: "user" } },
+    ]);
     return product;
   },
 

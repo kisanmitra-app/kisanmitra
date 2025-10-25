@@ -20,7 +20,7 @@ export const inventoriesTypeDefs = gql`
   }
 
   input CreateInventoryInput {
-    productId: ID!
+    product: String!
     quantity: Float!
     batchNumber: String
     expiryDate: String

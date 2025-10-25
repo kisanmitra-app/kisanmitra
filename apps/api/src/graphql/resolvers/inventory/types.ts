@@ -1,5 +1,5 @@
 export interface ICreateInventoryInput {
-  productId: string;
+  product: string;
   quantity: number;
   batchNumber?: string;
   expiryDate?: string;

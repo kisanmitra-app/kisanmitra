@@ -11,6 +11,7 @@ export const Query = {
     const docs = await Product.find({ user: user?.id }).populate([
       "user",
       "category",
+      { path: "category", populate: { path: "user" } },
     ]);
     return docs;
   },
@@ -19,6 +20,10 @@ export const Query = {
     _: any,
     { id }: { id: string }
   ): Promise<IProduct | null> => {
-    return Product.findById(id).populate(["user", "category"]);
+    return Product.findById(id).populate([
+      "user",
+      "category",
+      { path: "category", populate: { path: "user" } },
+    ]);
   },
 };

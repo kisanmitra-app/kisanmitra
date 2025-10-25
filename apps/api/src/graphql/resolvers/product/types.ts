@@ -1,7 +1,7 @@
 export interface ICreateProductInput {
   name: string;
   description?: string;
-  categoryId: string;
+  category: string;
   brand?: string;
   unit?: string;
 }
@@ -9,7 +9,7 @@ export interface ICreateProductInput {
 export interface IUpdateProductInput {
   name?: string;
   description?: string;
-  categoryId?: string;
+  category?: string;
   brand?: string;
   unit?: string;
 }
