@@ -5,6 +5,7 @@ import { emailOTP } from "better-auth/plugins/email-otp";
 import { db } from "./mongo";
 import { env } from "~/config";
 import { logger } from "./logger";
+import { Profile } from "@kisan-mitra/schemas";
 
 /**
  * Authentication Instance
@@ -38,7 +39,19 @@ export const auth = betterAuth({
       redirectURI: env.GOOGLE_REDIRECT_URI,
     },
   },
-  database: mongodbAdapter(db),
+  database: mongodbAdapter(db, { debugLogs: false, usePlural: true }),
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          await Profile.create({
+            user: user.id,
+            name: user.name ? user.name : user.email?.split("@")[0],
+          });
+        },
+      },
+    },
+  },
   emailAndPassword: { enabled: true },
 
   trustedOrigins: [

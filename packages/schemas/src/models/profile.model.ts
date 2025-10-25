@@ -3,13 +3,6 @@ import { IFilter, IQueryOptions, PaginatedDefaultResult } from "~/types";
 import { IProfile } from "../interfaces";
 import { paginate, toJSON } from "./plugins";
 
-/**
- * profileSchema - Schema for the Profile model
- * - user: Reference to the User model
- * - bio: Short biography of the user
- * - location: GeoJSON Point representing user's location
- * - preferences: Embedded preferences schema
- */
 const profileSchema = new mongoose.Schema<IProfile>(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },

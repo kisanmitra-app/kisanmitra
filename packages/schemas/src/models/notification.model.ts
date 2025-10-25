@@ -3,17 +3,6 @@ import type { INotification } from "../interfaces";
 import { paginate, toJSON } from "./plugins";
 import { PaginatedDefaultResult } from "~/types";
 
-/**
- * Notification Schema - Represents a notification sent to a user.
- * - recipient: The user receiving the notification.
- * - type: The type of notification (e.g., 'system').
- * - relatedUser: The user related to the notification (e.g., the user who liked).
- * - message: The content of the notification.
- * - isRead: Whether the notification has been read.
- * - readAt: Timestamp when the notification was read.
- * - isSeen: Whether the notification has been seen.
- * - seenAt: Timestamp when the notification was seen.
- */
 const notificationSchema = new mongoose.Schema<INotification>(
   {
     recipient: {
@@ -53,6 +42,17 @@ type NotificationModel = mongoose.Model<INotification> & {
   ) => Promise<PaginatedDefaultResult<INotification>>;
 };
 
+/**
+ * Notification - Represents a notification sent to a user.
+ * - recipient: The user receiving the notification.
+ * - type: The type of notification (e.g., 'system').
+ * - relatedUser: The user related to the notification (e.g., the user who liked).
+ * - message: The content of the notification.
+ * - isRead: Whether the notification has been read.
+ * - readAt: Timestamp when the notification was read.
+ * - isSeen: Whether the notification has been seen.
+ * - seenAt: Timestamp when the notification was seen.
+ */
 export const Notification = mongoose.model<INotification, NotificationModel>(
   "Notification",
   notificationSchema

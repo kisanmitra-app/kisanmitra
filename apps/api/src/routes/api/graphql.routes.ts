@@ -13,7 +13,7 @@ graphqlRoutes.get("/schema", (c) => {
   return c.text(schemaSDL);
 });
 
-// graphqlRoutes.use("*", authMiddleware); // Apply authentication middleware to all GraphQL routes
+graphqlRoutes.use("*", authMiddleware); // Apply authentication middleware to all GraphQL routes
 
 graphqlRoutes.use(
   "/",

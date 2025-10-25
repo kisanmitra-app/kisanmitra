@@ -3,12 +3,6 @@ import { PaginatedDefaultResult } from "~/types";
 import { IUser } from "../interfaces";
 import { paginate, toJSON } from "./plugins";
 
-/**
- * userSchema - Schema for the User model
- * - email: User's email address
- * - name: Full name of the user
- * - image: URL to the user's profile picture
- */
 const userSchema = new mongoose.Schema<IUser>(
   {
     email: { type: String, sparse: true, lowercase: true },
@@ -33,6 +27,9 @@ type UserModel = mongoose.Model<IUser> & {
 };
 
 /**
- * User - Mongoose model for the User schema
+ * user - Schema for the User model
+ * - email: User's email address
+ * - name: Full name of the user
+ * - image: URL to the user's profile picture
  */
 export const User = mongoose.model<IUser, UserModel>("User", userSchema);
