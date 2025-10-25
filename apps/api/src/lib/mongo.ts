@@ -9,7 +9,7 @@ import { logger } from "./logger";
 const client = new MongoClient(env.MONGO_URI);
 export const db = client.db();
 
-export const connectToDatabase = async () => {
+export const connectToMongo = async () => {
   try {
     await mongoose.connect(env.MONGO_URI);
     logger.info("MongoDB connected successfully");

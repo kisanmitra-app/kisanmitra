@@ -4,7 +4,8 @@
   "description": "capstone project",
   "scripts": {
     "watch": "pnpm run -r watch",
-    "watch:api": "cd apps/api && pnpm run watch"
+    "watch:api": "cd apps/api && pnpm run watch",
+    "build:packages": "pnpm run -F ./packages/* build"
   },
   "repository": {
     "type": "git",

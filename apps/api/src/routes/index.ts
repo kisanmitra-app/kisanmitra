@@ -1,11 +1,12 @@
 import { Hono } from "hono";
+import { auth } from "~/lib/auth";
+import { name, version } from "../../package.json";
 import { apiRoutes } from "./api";
-import { auth } from "~/lib";
 
 export const routes = new Hono();
 
 routes.get("/", (c) => {
-  return c.json({ message: "Welcome to the API" });
+  return c.json({ name, version });
 });
 
 routes.on(["POST", "GET"], "/api/auth/*", (c) => {

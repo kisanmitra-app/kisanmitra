@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { prettyJSON } from "hono/pretty-json";
-import { routes } from "./routes";
 import { loggingMiddleware } from "./middlewares";
+import { routes } from "./routes";
 
 /**
  * @description Hono app instance
@@ -12,12 +12,12 @@ app.use("*", prettyJSON({ space: 4 }));
 app.use(
   "*",
   cors({
-    origin: "*",
+    origin: ["*"], // ##TODO: restrict this to your frontend domain
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["POST", "GET", "OPTIONS", "PUT", "DELETE"],
     exposeHeaders: ["Content-Length"],
     maxAge: 600,
-    credentials: true,
+    credentials: true, // attach cookies
   })
 );
 
