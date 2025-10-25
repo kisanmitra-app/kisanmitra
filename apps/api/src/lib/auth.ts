@@ -1,14 +1,35 @@
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
+import { emailOTP } from "better-auth/plugins/email-otp";
 import { db } from "./mongo";
 import { env } from "~/config";
+import { logger } from "./logger";
 
 /**
  * Authentication Instance
  */
 export const auth = betterAuth({
-  plugins: [expo()],
+  plugins: [
+    expo(),
+    emailOTP({
+      sendVerificationOTP: async ({ email, otp, type }) => {
+        if (type === "sign-in") {
+          if (env.APP_ENV === "development") {
+            logger.info(`Login OTP for ${email}: ${otp}`);
+            return;
+          }
+          // const html = await render(LoginOtpEmail({ validationCode: otp }));
+          // await transporter.sendMail({
+          //   to: email,
+          //   from: env.SMTP_FROM,
+          //   subject: "Your Login OTP Code",
+          //   html,
+          // });
+        }
+      },
+    }),
+  ],
   socialProviders: {
     google: {
       clientId: env.GOOGLE_CLIENT_ID,
@@ -19,6 +40,7 @@ export const auth = betterAuth({
   },
   database: mongodbAdapter(db),
   emailAndPassword: { enabled: true },
+
   trustedOrigins: [
     "exp://172.20.10.3:8081/--/callback",
     "exp://192.168.1.6:8081/--/callback",

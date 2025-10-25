@@ -1,6 +1,5 @@
 packages:
   - packages/*
-  - api
-  - training-model
+  - apps/*
 
 nodeLinker: hoisted

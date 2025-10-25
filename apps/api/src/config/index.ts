@@ -31,4 +31,12 @@ export const env = envalid.cleanEnv(process.env, {
   GOOGLE_CLIENT_ID: envalid.str(),
   GOOGLE_CLIENT_SECRET: envalid.str(),
   GOOGLE_REDIRECT_URI: envalid.str({ default: "KisanMitra://callback" }),
+
+  // ========= SMTP =========
+  SMTP_HOST: envalid.str(),
+  SMTP_PORT: envalid.port(),
+  SMTP_USER: envalid.str(),
+  SMTP_PASS: envalid.str(),
+  SMTP_FROM: envalid.str(),
+  SMTP_SECURE: envalid.bool({ default: false }),
 });
