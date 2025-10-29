@@ -1,9 +1,10 @@
+import { categoriesResolvers } from "./category";
+import { inventoriesResolvers } from "./inventory";
+import { productsResolvers } from "./product";
 import { profilesResolvers } from "./profile";
 import { uploadsResolvers } from "./uploads";
+import { usagesResolvers } from "./usage";
 import { usersResolvers } from "./users";
-import { categoriesResolvers } from "./category";
-import { productsResolvers } from "./product";
-import { inventoriesResolvers } from "./inventory";
 
 /**
  * Array of all GraphQL resolvers.
@@ -15,4 +16,5 @@ export const resolvers = [
   categoriesResolvers,
   productsResolvers,
   inventoriesResolvers,
+  usagesResolvers,
 ];

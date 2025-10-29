@@ -4,6 +4,7 @@ import { usersTypeDefs } from "./users";
 import { categoriesTypeDefs } from "./category";
 import { productsTypeDefs } from "./product";
 import { inventoriesTypeDefs } from "./inventory";
+import { usagesTypeDefs } from "./usage";
 
 export const typeDefs = [
   usersTypeDefs,
@@ -11,5 +12,6 @@ export const typeDefs = [
   uploadsTypeDefs,
   categoriesTypeDefs,
   productsTypeDefs,
+  usagesTypeDefs,
   inventoriesTypeDefs,
 ];
