@@ -10,27 +10,26 @@ export const Mutation = {
   ) => {
     const user = context.get("user");
 
-    console.log("Creating usage with input:", input);
-
     const inventory = await Inventory.findById(input.inventoryId);
     if (!inventory) {
       throw new Error("Inventory not found");
     }
 
-    console.log("Found inventory:", inventory);
+    // check if enough quantity is available
+    if (inventory.quantity < input.quantityUsed) {
+      throw new Error("Insufficient inventory quantity");
+    }
 
     const usage = await Usage.create({
       inventory: inventory._id,
       quantityUsed: input.quantityUsed,
       user: user?.id,
-      usedOn: input.usedOn,
+      usedOn: new Date(input.usedOn),
       crop: input.crop,
       field: input.field,
       purpose: input.purpose,
       notes: input.notes,
     });
-
-    console.log("Created usage:", usage);
 
     await usage.save();
 
