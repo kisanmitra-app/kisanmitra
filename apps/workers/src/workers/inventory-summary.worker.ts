@@ -3,6 +3,8 @@ import { Worker } from "bullmq";
 import { CONSTS } from "~/config";
 import { google, logger, redis } from "~/lib";
 import { generateText } from "ai";
+import { generateObject } from "ai";
+import { z } from "zod";
 
 export const inventorySummaryWorker = new Worker(
   CONSTS.QUEUES.INVENTORY_SUMMARY,
@@ -52,13 +54,36 @@ export const inventorySummaryWorker = new Worker(
     console.log("Generated Prompt: ", prompt);
 
     // step 6: generate ai currated summary
-    const { text } = await generateText({
+    // const { text } = await generateText({
+    //   model: google("gemini-2.5-flash"),
+    //   prompt: prompt,
+    // });
+
+    // console.log(text);
+
+    const { object } = await generateObject({
       model: google("gemini-2.5-flash"),
+      schema: z.object({
+        recommendations: z
+          .array(z.string())
+          .min(2)
+          .max(2)
+          .describe(
+            "Concise summary highlighting key insights, trends, and recommendations for optimizing inventory management"
+          ),
+        insights: z
+          .array(z.string())
+          .min(2)
+          .max(2)
+          .describe("Data driven insights & local factors recommendations"),
+      }),
       prompt: prompt,
+    }).catch((err: any) => {
+      logger.error("Error generating inventory summary: ", err.message);
+      throw err;
     });
 
-    console.log(text);
-
+    console.log("Generated Object: ", JSON.stringify(object, null, 2));
     // step 7: store the generate output on profile
     // ##TODO
 

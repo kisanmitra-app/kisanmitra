@@ -1,8 +1,8 @@
 import { connectToMongo } from "./lib";
-// import {
-//   weatherUpdateQueueHelpers,
-//   inventorySummaryQueueHelpers,
-// } from "./queues";
+import {
+  weatherUpdateQueueHelpers,
+  inventorySummaryQueueHelpers,
+} from "./queues";
 import { shutdownAllWorkers } from "./workers";
 
 const main = async () => {
@@ -13,9 +13,9 @@ const main = async () => {
   //   `weather-update-${userId}:*/30 * * * * *`
   // );
 
-  // await inventorySummaryQueueHelpers.addJob(userId).then(() => {
-  //   console.log("done");
-  // });
+  await inventorySummaryQueueHelpers.addJob(userId).then(() => {
+    console.log("done");
+  });
 };
 
 main();
