@@ -21,8 +21,10 @@
     "typescript": "~5.9.3"
   },
   "dependencies": {
+    "@ai-sdk/google": "^2.0.25",
     "@aws-sdk/client-s3": "^3.920.0",
     "@kisan-mitra/schemas": "workspace:*",
+    "ai": "^5.0.82",
     "axios": "^1.13.1",
     "bullmq": "^5.62.1",
     "dotenv": "^17.2.3",

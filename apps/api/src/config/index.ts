@@ -46,4 +46,7 @@ export const env = envalid.cleanEnv(process.env, {
   S3_REGION: envalid.str(),
   S3_ENDPOINT: envalid.str(),
   S3_BUCKET_NAME: envalid.str(),
+
+  // ========= GOOGLE =========
+  GOOGLE_API_KEY: envalid.str(),
 });
