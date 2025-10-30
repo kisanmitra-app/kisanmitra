@@ -1,10 +1,11 @@
+import { categoriesTypeDefs } from "./category";
+import { inventoriesTypeDefs } from "./inventory";
+import { productsTypeDefs } from "./product";
 import { profilesTypeDefs } from "./profile";
 import { uploadsTypeDefs } from "./upload";
-import { usersTypeDefs } from "./users";
-import { categoriesTypeDefs } from "./category";
-import { productsTypeDefs } from "./product";
-import { inventoriesTypeDefs } from "./inventory";
 import { usagesTypeDefs } from "./usage";
+import { usersTypeDefs } from "./users";
+import { weatherTypeDefs } from "./weather";
 
 export const typeDefs = [
   usersTypeDefs,
@@ -14,4 +15,5 @@ export const typeDefs = [
   productsTypeDefs,
   usagesTypeDefs,
   inventoriesTypeDefs,
+  weatherTypeDefs,
 ];

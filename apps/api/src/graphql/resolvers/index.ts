@@ -5,6 +5,7 @@ import { profilesResolvers } from "./profile";
 import { uploadsResolvers } from "./uploads";
 import { usagesResolvers } from "./usage";
 import { usersResolvers } from "./users";
+import { weatherResolvers } from "./weather";
 
 /**
  * Array of all GraphQL resolvers.
@@ -17,4 +18,5 @@ export const resolvers = [
   productsResolvers,
   inventoriesResolvers,
   usagesResolvers,
+  weatherResolvers,
 ];
