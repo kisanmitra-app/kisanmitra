@@ -39,4 +39,11 @@ export const env = envalid.cleanEnv(process.env, {
   SMTP_PASS: envalid.str(),
   SMTP_FROM: envalid.str(),
   SMTP_SECURE: envalid.bool({ default: false }),
+
+  // ========= S3 =========
+  S3_ACCESS_KEY_ID: envalid.str(),
+  S3_SECRET_ACCESS_KEY: envalid.str(),
+  S3_REGION: envalid.str(),
+  S3_ENDPOINT: envalid.str(),
+  S3_BUCKET_NAME: envalid.str(),
 });
