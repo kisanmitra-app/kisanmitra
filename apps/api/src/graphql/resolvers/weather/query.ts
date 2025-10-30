@@ -14,8 +14,6 @@ export const Query = {
       throw new Error("Profile not found");
     }
 
-    console.log("Fetching weather for profile:", profile);
-
     const { coordinates, type } = profile.location;
 
     if (
@@ -33,7 +31,6 @@ export const Query = {
         `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code&timezone=auto`
       );
 
-      console.log("Weather data fetched:", data);
       return data;
     } catch (error: any) {
       throw new Error(error.message);

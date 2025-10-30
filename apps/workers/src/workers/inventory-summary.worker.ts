@@ -1,10 +1,39 @@
-import { ICategory, Inventory, IProduct, Profile } from "@kisan-mitra/schemas";
+import {
+  ICategory,
+  Inventory,
+  IProduct,
+  Profile,
+  Usage,
+  IUsage,
+} from "@kisan-mitra/schemas";
 import { Worker } from "bullmq";
 import { CONSTS } from "~/config";
 import { google, logger, redis } from "~/lib";
 import { generateText } from "ai";
 import { generateObject } from "ai";
 import { z } from "zod";
+
+// Helper function to determine season based on month and region
+function getSeason(month: number, region: string): string {
+  const isNorthernHemisphere =
+    !region.toLowerCase().includes("australia") &&
+    !region.toLowerCase().includes("new zealand") &&
+    !region.toLowerCase().includes("south africa") &&
+    !region.toLowerCase().includes("argentina") &&
+    !region.toLowerCase().includes("chile");
+
+  if (isNorthernHemisphere) {
+    if (month >= 2 && month <= 4) return "Spring";
+    if (month >= 5 && month <= 7) return "Summer";
+    if (month >= 8 && month <= 10) return "Fall/Autumn";
+    return "Winter";
+  } else {
+    if (month >= 2 && month <= 4) return "Fall/Autumn";
+    if (month >= 5 && month <= 7) return "Winter";
+    if (month >= 8 && month <= 10) return "Spring";
+    return "Summer";
+  }
+}
 
 export const inventorySummaryWorker = new Worker(
   CONSTS.QUEUES.INVENTORY_SUMMARY,
@@ -20,11 +49,30 @@ export const inventorySummaryWorker = new Worker(
 
     // step 2: get address
     const { city, country, region } = profile.address;
+    console.log("got address", city, country, region);
 
     // step 3: get inventory summary
     const inventories = await Inventory.find({ user: userId }).populate([
       { path: "product", populate: [{ path: "category" }] },
     ]);
+    console.log("got inventories", inventories.length);
+
+    // step 3.5: get usage history for crop cycle analysis (last 12 months)
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+    const usageHistory = await Usage.find({
+      user: userId,
+      usedOn: { $gte: oneYearAgo },
+    })
+      .populate([
+        {
+          path: "inventory",
+          populate: [{ path: "product", populate: [{ path: "category" }] }],
+        },
+      ])
+      .sort({ usedOn: -1 });
+    console.log("got usage history", usageHistory.length);
 
     // step 4: a listed string, inventory id with its product name, category, quantiy available
     let summary: string = "";
@@ -36,20 +84,86 @@ export const inventorySummaryWorker = new Worker(
 
     console.log("Inventory Summary Data: ", summary);
 
+    // step 4.5: prepare usage history summary for crop cycle insights
+    let usageSummary: string = "";
+    const cropUsageMap = new Map<
+      string,
+      { totalUsed: number; occurrences: number; months: Set<number> }
+    >();
+
+    usageHistory.forEach((usage) => {
+      const inventory = usage.inventory as any;
+      const product = inventory?.product as IProduct;
+      const usageDate = new Date(usage.usedOn);
+      const month = usageDate.getMonth();
+      const monthName = usageDate.toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      });
+
+      usageSummary += `${monthName}: ${product?.name || "Unknown"} - ${
+        usage.quantityUsed
+      } ${product?.unit || "units"}`;
+      if (usage.crop) usageSummary += ` (Crop: ${usage.crop})`;
+      if (usage.purpose) usageSummary += ` [${usage.purpose}]`;
+      usageSummary += "\n";
+
+      // Track crop-specific usage patterns
+      if (usage.crop && product?.name) {
+        const key = `${usage.crop}-${product.name}`;
+        if (!cropUsageMap.has(key)) {
+          cropUsageMap.set(key, {
+            totalUsed: 0,
+            occurrences: 0,
+            months: new Set(),
+          });
+        }
+        const data = cropUsageMap.get(key)!;
+        data.totalUsed += usage.quantityUsed;
+        data.occurrences += 1;
+        data.months.add(month);
+      }
+    });
+
+    console.log("Usage History Summary: ", usageSummary);
+
+    // Get current season context
+    const currentDate = new Date();
+    const currentMonth = currentDate.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+    const currentSeason = getSeason(
+      currentDate.getMonth(),
+      region || "unknown"
+    );
+
     const address = `${city}, ${region}, ${country}`;
     console.log("Address: ", address);
 
     // step 5: geenrate prompt
     const prompt =
-      "You are an expert inventory analyst. Based on the following inventory data, provide a concise summary highlighting key insights, trends, and recommendations for optimizing inventory management.\n\n" +
-      +"Also the inventory is focued for a farmer located in " +
-      address +
-      ".\n\n" +
-      "Inventory Data:\n" +
-      summary +
-      "\n\n" +
-      "Please provide the summary in a structured format with bullet points for easy readability. with max 100 words in total, avoid greetings and sign off." +
-      "\n\nAlso add two points based on data driven insights & local factors that could help improve crop yield and farm productivity.";
+      `You are an expert agricultural inventory analyst and crop planning specialist. Analyze the following data to provide predictive inventory planning recommendations based on crop cycles and seasonal demand forecasting.\n\n` +
+      `CURRENT CONTEXT:\n` +
+      `- Date: ${currentMonth}\n` +
+      `- Season: ${currentSeason}\n` +
+      `- Location: ${address}\n\n` +
+      `CURRENT INVENTORY DATA:\n${summary}\n` +
+      `USAGE HISTORY (Past 12 Months):\n${
+        usageSummary || "No usage history available"
+      }\n\n` +
+      `ANALYSIS REQUIREMENTS:\n` +
+      `1. Identify seasonal patterns in inventory usage based on historical data\n` +
+      `2. Predict upcoming demand based on crop cycles typical for ${region}, ${country}\n` +
+      `3. Recommend optimal inventory levels for the next 3-6 months considering:\n` +
+      `   - Current season (${currentSeason}) and upcoming seasonal transitions\n` +
+      `   - Historical usage patterns and crop-specific needs\n` +
+      `   - Regional agricultural calendar and planting/harvesting cycles\n` +
+      `   - Weather patterns typical for this location and time of year\n` +
+      `4. Suggest procurement timing to align with crop cycles and avoid stockouts\n` +
+      `5. Identify items that may have seasonal demand spikes or drops\n` +
+      `6. Provide data-driven insights on local farming practices that could improve yield and productivity\n\n` +
+      `Please provide actionable, specific recommendations with quantities and timeframes where possible.`;
 
     console.log("Generated Prompt: ", prompt);
 
@@ -66,16 +180,67 @@ export const inventorySummaryWorker = new Worker(
       schema: z.object({
         recommendations: z
           .array(z.string())
-          .min(2)
-          .max(2)
           .describe(
-            "Concise summary highlighting key insights, trends, and recommendations for optimizing inventory management"
+            "General recommendations for optimizing current inventory management"
           ),
-        insights: z
+        seasonalForecasts: z
+          .array(
+            z.object({
+              period: z
+                .string()
+                .describe(
+                  "Time period (e.g., 'Next 3 months', 'December-February')"
+                ),
+              expectedDemand: z
+                .string()
+                .describe("Predicted demand changes for this period"),
+              suggestedActions: z
+                .array(z.string())
+                .describe("Specific actions to take during this period"),
+            })
+          )
+          .describe(
+            "Seasonal demand forecasts and predictions for upcoming periods"
+          ),
+        cropCycleInsights: z
+          .array(
+            z.object({
+              crop: z.string().describe("Crop name or type"),
+              cycle: z
+                .string()
+                .describe("Typical crop cycle information for the region"),
+              inventoryNeeds: z
+                .array(z.string())
+                .describe("Inventory items needed for this crop cycle"),
+            })
+          )
+          .describe("Crop cycle analysis and related inventory planning"),
+        procurementPlan: z
+          .array(
+            z.object({
+              item: z.string().describe("Inventory item name"),
+              currentQuantity: z.string().describe("Current stock level"),
+              recommendedQuantity: z
+                .string()
+                .describe("Recommended stock level"),
+              timing: z
+                .string()
+                .describe(
+                  "When to procure (e.g., 'Within 2 weeks', 'Before December')"
+                ),
+              rationale: z
+                .string()
+                .describe("Why this procurement is recommended"),
+            })
+          )
+          .describe(
+            "Specific procurement recommendations with quantities and timing"
+          ),
+        yieldImprovementTips: z
           .array(z.string())
-          .min(2)
-          .max(2)
-          .describe("Data driven insights & local factors recommendations"),
+          .describe(
+            "Data-driven insights and local farming practices to improve crop yield and productivity"
+          ),
       }),
       prompt: prompt,
     }).catch((err: any) => {
@@ -102,6 +267,12 @@ export const inventorySummaryWorker = new Worker(
 
       logger.info(`Low stock for ${productNames}`);
     }
+
+    // step 9: update the profile
+    profile.aiInventorySummary = object;
+    await profile.save();
+
+    return { success: true };
   },
   { connection: redis, concurrency: 10 }
 );

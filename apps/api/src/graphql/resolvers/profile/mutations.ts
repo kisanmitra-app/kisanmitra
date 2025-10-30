@@ -19,8 +19,6 @@ export const Mutation = {
 
     await profile.save();
 
-    console.log("Updated profile:", JSON.stringify(profile, null, 2));
-
     await profile.populate(["user"]);
 
     return profile;

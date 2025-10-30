@@ -17,6 +17,29 @@ export interface IProfile extends Document {
     country?: string;
   };
 
+  // explore tab
+  aiInventorySummary: {
+    recommendations: string[];
+    seasonalForecasts: {
+      period: string;
+      expectedDemand: string;
+      suggestedActions: string[];
+    }[];
+    cropCycleInsights: {
+      crop: string;
+      cycle: string;
+      inventoryNeeds: string[];
+    }[];
+    procurementPlan: {
+      item: string;
+      currentQuantity: string;
+      recommendedQuantity: string;
+      timing: string;
+      rationale: string;
+    }[];
+    yieldImprovementTips: string[];
+  };
+
   createdAt: Date;
   updatedAt: Date;
 }

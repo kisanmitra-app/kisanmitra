@@ -12,12 +12,41 @@ export const profilesTypeDefs = gql`
     country: String
   }
 
+  type SeasonalForecast {
+    period: String
+    expectedDemand: String
+    suggestedActions: [String]
+  }
+
+  type CropCycleInsight {
+    crop: String
+    cycle: String
+    inventoryNeeds: [String]
+  }
+
+  type ProcurementPlanItem {
+    item: String
+    currentQuantity: String
+    recommendedQuantity: String
+    timing: String
+    rationale: String
+  }
+
+  type AiInventorySummary {
+    recommendations: [String]
+    seasonalForecasts: [SeasonalForecast]
+    cropCycleInsights: [CropCycleInsight]
+    procurementPlan: [ProcurementPlanItem]
+    yieldImprovementTips: [String]
+  }
+
   type Profile {
     id: ID!
     user: User!
     name: String
     location: Location
     address: Address
+    aiInventorySummary: AiInventorySummary
 
     createdAt: String
     updatedAt: String

@@ -8,7 +8,7 @@ import { shutdownAllWorkers } from "./workers";
 const main = async () => {
   await connectToMongo();
 
-  const userId = "68fcff12ccc103e78470f295";
+  const userId = "6903f4d5c0f20cca8616b7fe";
   // await weatherUpdateQueueHelpers.removeRepeatableJob(
   //   `weather-update-${userId}:*/30 * * * * *`
   // );

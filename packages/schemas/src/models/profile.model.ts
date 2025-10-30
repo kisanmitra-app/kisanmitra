@@ -25,6 +25,53 @@ const profileSchema = new mongoose.Schema<IProfile>(
         default: [0, 0],
       },
     },
+
+    aiInventorySummary: {
+      recommendations: {
+        type: [String],
+        default: [],
+      },
+
+      seasonalForecasts: {
+        type: [
+          {
+            period: String,
+            expectedDemand: String,
+            suggestedActions: [String],
+          },
+        ],
+        default: [],
+      },
+
+      cropCycleInsights: {
+        type: [
+          {
+            crop: String,
+            cycle: String,
+            inventoryNeeds: [String],
+          },
+        ],
+        default: [],
+      },
+
+      procurementPlan: {
+        type: [
+          {
+            item: String,
+            currentQuantity: String,
+            recommendedQuantity: String,
+            timing: String,
+            rationale: String,
+          },
+        ],
+        default: [],
+      },
+
+      yieldImprovementTips: {
+        type: [String],
+        default: [],
+      },
+    },
   },
   { timestamps: true }
 );
@@ -49,6 +96,7 @@ type ProfileModel = mongoose.Model<IProfile> & {
  * - name: User's full name
  * - user: Reference to the User model
  * - location: GeoJSON Point representing user's location
+ * - aiInventorySummary: AI-generated inventory summary with recommendations
  */
 export const Profile = mongoose.model<IProfile, ProfileModel>(
   "Profile",
