@@ -9,8 +9,6 @@ export const Mutation = {
   ) => {
     const user = context.get("user");
 
-    console.log("Creating scan for uploadId:", uploadId, "userId:", user?.id);
-
     const scan = await Scan.create({
       user: user?.id,
       upload: uploadId,

@@ -13,9 +13,7 @@ const main = async () => {
   //   `weather-update-${userId}:*/30 * * * * *`
   // );
 
-  await inventorySummaryQueueHelpers.addJob(userId).then(() => {
-    console.log("done");
-  });
+  await inventorySummaryQueueHelpers.addJob(userId);
 };
 
 main();

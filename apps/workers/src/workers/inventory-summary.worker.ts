@@ -49,13 +49,11 @@ export const inventorySummaryWorker = new Worker(
 
     // step 2: get address
     const { city, country, region } = profile.address;
-    console.log("got address", city, country, region);
 
     // step 3: get inventory summary
     const inventories = await Inventory.find({ user: userId }).populate([
       { path: "product", populate: [{ path: "category" }] },
     ]);
-    console.log("got inventories", inventories.length);
 
     // step 3.5: get usage history for crop cycle analysis (last 12 months)
     const oneYearAgo = new Date();
@@ -72,7 +70,6 @@ export const inventorySummaryWorker = new Worker(
         },
       ])
       .sort({ usedOn: -1 });
-    console.log("got usage history", usageHistory.length);
 
     // step 4: a listed string, inventory id with its product name, category, quantiy available
     let summary: string = "";
@@ -81,8 +78,6 @@ export const inventorySummaryWorker = new Worker(
       const category = product.category as ICategory;
       summary += `Inventory ID: ${inventory._id}, Product: ${product.name}, Category: ${category.name}, Quantity Available: ${inventory.quantity} (${product.unit})\n`;
     });
-
-    console.log("Inventory Summary Data: ", summary);
 
     // step 4.5: prepare usage history summary for crop cycle insights
     let usageSummary: string = "";
@@ -125,8 +120,6 @@ export const inventorySummaryWorker = new Worker(
       }
     });
 
-    console.log("Usage History Summary: ", usageSummary);
-
     // Get current season context
     const currentDate = new Date();
     const currentMonth = currentDate.toLocaleDateString("en-US", {
@@ -139,7 +132,6 @@ export const inventorySummaryWorker = new Worker(
     );
 
     const address = `${city}, ${region}, ${country}`;
-    console.log("Address: ", address);
 
     // step 5: geenrate prompt
     const prompt =
@@ -164,8 +156,6 @@ export const inventorySummaryWorker = new Worker(
       `5. Identify items that may have seasonal demand spikes or drops\n` +
       `6. Provide data-driven insights on local farming practices that could improve yield and productivity\n\n` +
       `Please provide actionable, specific recommendations with quantities and timeframes where possible.`;
-
-    console.log("Generated Prompt: ", prompt);
 
     const { object } = await generateObject({
       model: google("gemini-2.5-flash"),
@@ -235,11 +225,7 @@ export const inventorySummaryWorker = new Worker(
       throw err;
     });
 
-    console.log("Generated Object: ", JSON.stringify(object, null, 2));
-    // step 7: store the generate output on profile
-    // ##TODO
-
-    // step 8: low stock alert based on inventory summary
+    // step 6: low stock alert based on inventory summary
     const lowStockItems = inventories.filter(
       (inventory) => inventory.quantity < 10
     );
@@ -255,7 +241,7 @@ export const inventorySummaryWorker = new Worker(
       logger.info(`Low stock for ${productNames}`);
     }
 
-    // step 9: update the profile
+    // step 7: update the profile
     profile.aiInventorySummary = object;
     await profile.save();
 

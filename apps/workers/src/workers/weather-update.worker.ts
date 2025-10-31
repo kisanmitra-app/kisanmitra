@@ -170,25 +170,6 @@ const sendWeatherNotification = async (
   weatherData: WeatherData
 ) => {
   // TODO: Implement actual notification service (push notification, SMS, email, etc.)
-  console.log("=== WEATHER ALERT ===");
-  console.log(`User ID: ${userId}`);
-  console.log(`Severity: ${conditions.severity.toUpperCase()}`);
-  console.log(`Location: ${weatherData.latitude}, ${weatherData.longitude}`);
-  console.log("Dangerous conditions detected:");
-  conditions.reasons.forEach((reason, index) => {
-    console.log(`  ${index + 1}. ${reason}`);
-  });
-  console.log("Tomorrow's forecast:");
-  console.log(
-    `  Temperature: ${weatherData.daily.temperature_2m_min[1].toFixed(
-      1
-    )}°C - ${weatherData.daily.temperature_2m_max[1].toFixed(1)}°C`
-  );
-  console.log(
-    `  Precipitation: ${weatherData.daily.precipitation_sum[1].toFixed(1)}mm`
-  );
-  console.log("====================");
-
   // Placeholder: In production, integrate with:
   // - Push notification service (Firebase, OneSignal, etc.)
   // - SMS service (Twilio, AWS SNS, etc.)
@@ -241,14 +222,7 @@ export const weatherUpdateWorker = new Worker(
 
     // Only notify user if dangerous conditions are detected
     if (dangerousConditions.isDangerous) {
-      console.log(
-        `Dangerous weather detected for user ${userId}. Sending notification...`
-      );
       await sendWeatherNotification(userId, dangerousConditions, weatherData);
-    } else {
-      console.log(
-        `No dangerous weather conditions detected for user ${userId}. Skipping notification.`
-      );
     }
 
     return {
