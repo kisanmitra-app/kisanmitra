@@ -33,7 +33,6 @@ export const profilesTypeDefs = gql`
   }
 
   type AiInventorySummary {
-    recommendations: [String]
     seasonalForecasts: [SeasonalForecast]
     cropCycleInsights: [CropCycleInsight]
     procurementPlan: [ProcurementPlanItem]

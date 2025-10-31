@@ -167,22 +167,9 @@ export const inventorySummaryWorker = new Worker(
 
     console.log("Generated Prompt: ", prompt);
 
-    // step 6: generate ai currated summary
-    // const { text } = await generateText({
-    //   model: google("gemini-2.5-flash"),
-    //   prompt: prompt,
-    // });
-
-    // console.log(text);
-
     const { object } = await generateObject({
       model: google("gemini-2.5-flash"),
       schema: z.object({
-        recommendations: z
-          .array(z.string())
-          .describe(
-            "General recommendations for optimizing current inventory management"
-          ),
         seasonalForecasts: z
           .array(
             z.object({

@@ -19,7 +19,6 @@ export interface IProfile extends Document {
 
   // explore tab
   aiInventorySummary: {
-    recommendations: string[];
     seasonalForecasts: {
       period: string;
       expectedDemand: string;

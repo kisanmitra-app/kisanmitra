@@ -27,11 +27,6 @@ const profileSchema = new mongoose.Schema<IProfile>(
     },
 
     aiInventorySummary: {
-      recommendations: {
-        type: [String],
-        default: [],
-      },
-
       seasonalForecasts: {
         type: [
           {
