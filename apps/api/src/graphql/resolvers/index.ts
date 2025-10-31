@@ -2,6 +2,7 @@ import { categoriesResolvers } from "./category";
 import { inventoriesResolvers } from "./inventory";
 import { productsResolvers } from "./product";
 import { profilesResolvers } from "./profile";
+import { scansResolvers } from "./scan";
 import { uploadsResolvers } from "./uploads";
 import { usagesResolvers } from "./usage";
 import { usersResolvers } from "./users";
@@ -19,4 +20,5 @@ export const resolvers = [
   inventoriesResolvers,
   usagesResolvers,
   weatherResolvers,
+  scansResolvers,
 ];

@@ -3,6 +3,7 @@ export * from "./inventory.interface";
 export * from "./notification.interface";
 export * from "./product.interface";
 export * from "./profile.interface";
+export * from "./scan.interface";
 export * from "./upload.interface";
 export * from "./usage.interface";
 export * from "./user.interface";

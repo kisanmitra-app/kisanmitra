@@ -3,6 +3,7 @@ export * from "./inventory.model";
 export * from "./notification.model";
 export * from "./product.model";
 export * from "./profile.model";
+export * from "./scan.model";
 export * from "./upload.model";
 export * from "./usage.model";
 export * from "./user.model";

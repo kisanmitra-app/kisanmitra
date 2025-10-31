@@ -10,7 +10,9 @@ uploadRoutes.use("/*", authMiddleware);
 const uploadService = new UploadService();
 
 uploadRoutes.post("/", async (c) => {
+  console.log("Upload request received");
   const body = await c.req.parseBody();
+  console.log("Parsed body:", body);
   const file = body["file"];
   const user = c.get("user");
 
