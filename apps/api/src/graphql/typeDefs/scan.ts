@@ -16,7 +16,13 @@ export const scansTypeDefs = gql`
     id: ID!
     user: User!
     upload: Upload!
+    status: String!
     scannedAt: String
+    affected: Boolean!
+    resolved: Boolean!
+    resolvedAt: String
+    notifyNearbyFarmers: Boolean
+    notificationRadiusKm: Int
     aiInsights: AiInsights
     results: [ScanResult]
     createdAt: String

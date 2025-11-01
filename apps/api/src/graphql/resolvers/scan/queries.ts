@@ -10,6 +10,8 @@ export const Query = {
       "user",
     ]);
 
+    console.log("Fetched scan:", JSON.stringify(scans, null, 2));
+
     return scans;
   },
 
