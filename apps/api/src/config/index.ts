@@ -32,14 +32,6 @@ export const env = envalid.cleanEnv(process.env, {
   GOOGLE_CLIENT_SECRET: envalid.str(),
   GOOGLE_REDIRECT_URI: envalid.str({ default: "KisanMitra://callback" }),
 
-  // ========= SMTP =========
-  SMTP_HOST: envalid.str(),
-  SMTP_PORT: envalid.port(),
-  SMTP_USER: envalid.str(),
-  SMTP_PASS: envalid.str(),
-  SMTP_FROM: envalid.str(),
-  SMTP_SECURE: envalid.bool({ default: false }),
-
   // ========= S3 =========
   S3_ACCESS_KEY_ID: envalid.str(),
   S3_SECRET_ACCESS_KEY: envalid.str(),
